@@ -18,9 +18,12 @@ class Model:
     def create(cls, name):
         from .openai import OpenAIModel
         from .openrouter import OpenRouterModel
+        from .ollama import OllamaModel
 
         if "openrouter.ai" in openai.api_base:
             return OpenRouterModel(name)
+        if "ollama" in name:
+            return OllamaModel(name)
         return OpenAIModel(name)
 
     def __str__(self):

@@ -19,6 +19,22 @@ CACHE = None
 # CACHE = Cache(CACHE_PATH)
 
 
+
+def fetch_ollama_response(param: list) -> openai.ChatCompletion:
+    # Generate a LLAMA2 prompt
+    system_prompt = ""
+    prompt = "";
+    for sub_dict in param:
+        if sub_dict['role'] == 'user':
+            prompt = sub_dict['content']
+        elif sub_dict['role'] == 'system':
+            system_prompt = sub_dict['content']
+
+    json_payload = '{"model": "llama2:13b", "stream": false, "prompt": "' + safestr(prompt) + '", "system": "' + safestr(system_prompt) + '"}'
+    container = Container()
+    return container
+
+
 @backoff.on_exception(
     backoff.expo,
     (
@@ -61,7 +77,10 @@ def send_with_retries(model_name, messages, functions, stream):
     if not stream and CACHE is not None and key in CACHE:
         return hash_object, CACHE[key]
 
-    res = openai.ChatCompletion.create(**kwargs)
+    if "ollama" in model_name:
+        res = fetch_ollama_response(messages)
+    else:
+        res = openai.ChatCompletion.create(**kwargs)
 
     if not stream and CACHE is not None:
         CACHE[key] = res
